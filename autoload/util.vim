@@ -140,7 +140,7 @@ endfunc
 func! util#add_empty_zettel_body(title)
 	let l:body = [
 	  \ '---',
-	  \ 'date: '.strftime("%Y-%m-%dT%H:%M"),
+	  \ 'date: '.strftime("%Y-%m-%d"),
 	  \ '---',
 	  \ '',
 	  \ '# '.a:title

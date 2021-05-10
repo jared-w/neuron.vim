@@ -32,7 +32,7 @@ let g:neuron_tags_name = get(g:, 'neuron_tags_name', 'tags')
 let g:neuron_tags_style = get(g:, 'neuron_tags_style', 'multiline')
 let g:neuron_tmp_filename = get(g:, 'neuron_tmp_filename', '/tmp/neuronzettelsbuffer')
 
-nm <silent> <Plug>EditZettelNew :<C-U>call neuron#edit_zettel_new('')<cr>
+nm <silent> <Plug>EditZettelNew :<C-U>call neuron#edit_zettel_new('', 0)<cr>
 nm <silent> <Plug>EditZettelSearchContent :<C-U>call neuron#search_content(0)<cr>
 nm <silent> <Plug>EditZettelSearchContentUnderCursor :<C-U>call neuron#search_content(1)<cr>
 nm <silent> <Plug>EditZettelNewFromCword :<C-U>call neuron#edit_zettel_new_from_cword()<cr>

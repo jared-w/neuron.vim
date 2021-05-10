@@ -109,7 +109,12 @@ func! neuron#search_content(use_cursor)
 	if a:use_cursor
 		let l:query = expand("<cword>")
 	endif
-	call fzf#vim#ag(l:query, fzf#vim#with_preview({'dir': g:neuron_dir, 'options': '--exact'}), g:neuron_fullscreen_search)
+	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" search -a '
+	call fzf#vim#grep('rg --column --line-number --no-heading --smart-case --sort path -g "**/*{' . g:neuron_extension . '}"  -- '.shellescape(l:query),
+				\ 1,
+				\ fzf#vim#with_preview({'dir': g:neuron_dir, 'options': ['--exact', '--tac', '--no-sort', '-d', ':', '-n', '2..', '--preview-window', ':+{2}-10']}),
+				\ g:neuron_fullscreen_search)
+	call neuron#add_virtual_titles()
 endf
 
 func! neuron#edit_zettel_select()
@@ -245,7 +250,7 @@ func! neuron#refresh_cache(add_titles)
 	endif
 	
 	let g:_neuron_cache_add_titles = a:add_titles
-	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" query --zettels'
+	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" query --cached --zettels'
 	if has('nvim')
 		call jobstart(l:cmd, {
 			\ 'on_stdout': function('s:refresh_cache_callback_nvim'),
@@ -312,7 +317,7 @@ func! s:refresh_cache_callback(data)
 endf
 
 func! s:refresh_backlink_cache_for_zettel(id)
-	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" query --backlinks-of "'.a:id.'"'
+	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" query --cached --backlinks-of "'.a:id.'"'
 	if has('nvim')
 		call jobstart(l:cmd, {
 			\ 'on_stdout': function('s:refresh_backlink_callback_nvim'),
@@ -336,12 +341,17 @@ func! s:refresh_backlink_cache_for_zettel(id)
 endf
 
 func s:refresh_backlink_callback_nvim(id, data, event)
-	let l:decoded = json_decode(join(a:data))
-	call s:refresh_backlink_callback(l:decoded)
+	let l:joined = join(a:data)
+	if l:joined != ""
+		let l:decoded = json_decode(l:joined)
+		call s:refresh_backlink_callback(l:decoded)
+	end
 endf
 
 func! s:refresh_backlink_callback_vim(channel, data)
-    call s:refresh_backlink_callback(json_decode(a:data))
+	if a:data != ""
+		call s:refresh_backlink_callback(json_decode(a:data))
+	end
 endf
 
 func! s:refresh_backlink_callback(data)
@@ -384,6 +394,7 @@ func! neuron#on_enter()
 	endif
 
 	if g:_neuron_did_init
+		call neuron#add_virtual_titles()
 		return
 	endif
 	let g:_neuron_did_init = 1
@@ -721,7 +732,7 @@ endfunc
 func! neuron#tags_add_select()
 	" TODO: use cache
 	" TODO: get rid of stderr redirect, use job_start instead
-	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" query --tags 2>/dev/null'
+	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" query --cached --tags 2>/dev/null'
 	let l:data = system(l:cmd)
 	let l:tags = json_decode(l:data)
 	if empty(l:tags)
@@ -743,7 +754,7 @@ func! neuron#tags_search()
 
 	"TODO: use cache
 	"TODO: remove stderr redirect
-	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" query --tag="'.l:tag.'" 2>/dev/null'
+	let l:cmd = g:neuron_executable.' -d "'.g:neuron_dir.'" query --cached --tag="'.l:tag.'" 2>/dev/null'
 	let l:data = system(l:cmd)
 	let l:zettels = json_decode(data)
 	if empty(l:zettels)
